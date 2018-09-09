@@ -1,73 +1,20 @@
-// 1. Require 'apollo server'
-//
-const { ApolloServer } = require('apollo-server');
+const { ApolloServer } = require('apollo-server-express');
+const express = require('express');
+const expressPlayground = require('graphql-playground-middleware-express').default;
+const { readFileSync } = require('fs');
 
-const typeDefs = `
-  enum PhotoCategory {
-    SELFIE
-    PORTRAIT
-    ACTION
-    LANDSCAPE
-    GRAPHIC
-  }
-  
-  type Photo {
-    id: ID!
-    url: String!
-    name: String!
-    description: String
-    category: PhotoCategory!
-  }
+const typeDefs = readFileSync('./typeDefs.graphql', 'UTF-8');
+const resolvers = require('./resolvers');
 
-  input PostPhotoInput {
-    name: String!
-    category: PhotoCategory=PORTRAIT
-    description: String
-  }
-  
-  type Query {
-    totalPhotos: Int!
-    allPhotos: [Photo!]!
-  }
-  
-  type Mutation {
-    postPhoto(input: PostPhotoInput!): Photo!
-  }
-`;
+const app = express();
 
-var _id = 0;
-var photos = [];
+const server = new ApolloServer({ typeDefs, resolvers });
 
-const resolvers = {
-  Query: {
-    totalPhotos: () => photos.length,
-    allPhotos: () => photos
-  },
-  Mutation: {
-    postPhoto(parent, args) {
-      var newPhoto = {
-        id: _id++,
-        ...args.input
-      };
-      photos.push(newPhoto);
+server.applyMiddleware({ app });
 
-      return newPhoto;
-    }
-  },
-  Photo: {
-    url: parent => `http://yoursite.com/img/${parent.id}.jpg`
-  }
-};
+app.get('/', (req, res) => res.end('Welcome to PhotoShare API'));
+app.get('/playground', expressPlayground({ endpoint: '/graphql' }));
 
-// 2. Create an instance of the server.
-// 3. Send it an object with the typeDefs (the schema) and resolvers
-
-const server = new ApolloServer({
-  typeDefs,
-  resolvers
-});
-
-// 4. Call listen ni the server to launch the web server
-server
-  .listen()
-  .then(({url}) => console.log(`GraphQL Service running on $(url)`));
+app.listen({ port: 4000 }, () =>
+  console.log(`GraphQL Server running @ thhp://localhost:4000${server.graphqlPath}`)
+);

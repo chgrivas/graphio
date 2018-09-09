@@ -10,8 +10,10 @@
   "author": "Chris Grivas",
   "license": "ISC",
   "dependencies": {
-    "apollo-server": "^2.0.7",
+    "apollo-server-express": "^2.0.6",
+    "express": "^4.16.3",
     "graphql": "^14.0.2",
+    "graphql-playground-middleware-express": "^1.7.3",
     "nodemon": "^1.18.4"
   }
 }
